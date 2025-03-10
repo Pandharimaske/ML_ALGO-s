@@ -1,4 +1,9 @@
 import numpy as np
+import sys
+import os
+
+# Add the ML_ALGO-s directory to sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from REGRESSION.regression import BaseRegression
 class LinearRegression(BaseRegression):
 
