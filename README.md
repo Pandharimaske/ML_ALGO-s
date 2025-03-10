@@ -1,1 +1,1 @@
-ML_ALGO's From Schratch
+ML_ALGO's From Scratch
