@@ -7,6 +7,12 @@ def entropy(y):
     ps = hist / len(y)
     return -np.sum([p * np.log2(p) for p in ps if p > 0])
 
+def gini(y):
+    hist = np.bincount(y)
+    ps = hist / len(y)
+    return 1 - np.sum([p**2 for p in ps if p > 0])
+
+
 
 class Node:
 
@@ -23,11 +29,13 @@ class Node:
 
 class DecisionTree:
 
-    def __init__(self , min_samples_split = 2 , max_depth = 100 , n_feats = None):
+    def __init__(self , min_samples_split = 2 , max_depth = 100 , n_feats = None , criterion = 'gini'):
         self.min_samples_split = min_samples_split
         self.max_depth = max_depth
         self.n_feats = n_feats
+        self.criterion = criterion
         self.root = None
+
 
     def fit(self , X , y):
         # grow tree
@@ -64,7 +72,7 @@ class DecisionTree:
             X_column = X[: , feat_idx]
             thresholds = np.unique(X_column)
             for threshold in thresholds:
-                gain = self._information_gain(y , X_column , threshold)
+                gain = self._calculate_gain(y , X_column , threshold)
 
                 if gain > best_gain:
                     best_gain = gain
@@ -74,24 +82,30 @@ class DecisionTree:
         return split_idx , split_thresh
     
 
-    def _information_gain(self , y , X_column , split_thresh):
-        # parent E
-        parent_entropy = entropy(y)
-        # generate split
-        left_idxs , right_idxs = self._split(X_column , split_thresh)
+    def _calculate_gain(self, y, X_column, split_thresh):
+        # parent entropy / gini
+        if self.criterion == "entropy":
+            parent_impurity = entropy(y)
+        else:
+            parent_impurity = gini(y)
 
+        # generate split
+        left_idxs, right_idxs = self._split(X_column, split_thresh)
         if len(left_idxs) == 0 or len(right_idxs) == 0:
             return 0
         
-        # weighted avg child E
+        # weighted avg child E/G
         n = len(y)
-        n_l , n_r = len(left_idxs) , len(right_idxs)
-        e_l , e_r = entropy(y[left_idxs]) , entropy(y[right_idxs])
-        child_entropy = (n_l / n) * e_l + (n_r / n) * e_r
-        
-        # return ig
-        ig = parent_entropy - child_entropy
-        return ig
+        n_l, n_r = len(left_idxs), len(right_idxs)
+
+        if self.criterion == "entropy":
+            e_l, e_r = entropy(y[left_idxs]), entropy(y[right_idxs])
+        else:
+            e_l, e_r = gini(y[left_idxs]), gini(y[right_idxs])
+
+        child_impurity = (n_l / n) * e_l + (n_r / n) * e_r
+
+        return parent_impurity - child_impurity
 
     
     def _split(self , X_column , split_thresh):
