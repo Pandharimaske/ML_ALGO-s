@@ -9,7 +9,7 @@ print(X.shape)
 clusters = len(np.unique(y))
 print(clusters)
 
-k = KMeans(K=clusters , max_iters=150 , plot_steps=False)
+k = KMeans(K=clusters , max_iters=150 , plot_steps=True)
 y_pred = k.predict(X)
 
 k.plot()
